@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { useSegments, useRouter } from 'expo-router';
 
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
@@ -7,6 +8,27 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const segments = useSegments();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if user is authenticated here
+    const isAuthenticated = false; // This will be replaced with actual auth check
+
+    // Add a small delay to ensure root layout is mounted
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        // Show splash screen
+        router.replace('/');
+      } else if (!isAuthenticated) {
+        // Not authenticated, redirect to auth flow
+        router.replace('../');
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   return (
     <Tabs

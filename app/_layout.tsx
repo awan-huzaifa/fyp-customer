@@ -1,14 +1,22 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import SplashScreenComponent from './SplashScreen';
+import WelcomeScreen from './WelcomeScreen';
+import LoginScreen from './LoginScreen';
+import RegisterScreen from './RegisterScreen';
+import HomeScreen from './HomeScreen';
+import TabLayout from './(tabs)/_layout'; // Ensure this is correctly imported
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+
 SplashScreen.preventAutoHideAsync();
+
+const Stack = createNativeStackNavigator();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -16,11 +24,20 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
+  const [isSplashScreenVisible, setSplashScreenVisible] = useState(true);
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplashScreenVisible(false); // Hide splash after 3 seconds
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!loaded) {
     return null;
@@ -28,10 +45,20 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+      <Stack.Navigator>
+        {isSplashScreenVisible ? (
+          <Stack.Screen name="SplashScreen" component={SplashScreenComponent} options={{ headerShown: false }} />
+        ) : (
+          <>
+            <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="TabLayout" component={TabLayout} options={{ headerShown: false }} />
+            
+          </>
+        )}
+      </Stack.Navigator>
     </ThemeProvider>
   );
 }
