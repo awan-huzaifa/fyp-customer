@@ -1,6 +1,9 @@
 import { Tabs } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useSegments, useRouter } from 'expo-router';
+import React from 'react';
+
+// ... rest of your layout code
 
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
