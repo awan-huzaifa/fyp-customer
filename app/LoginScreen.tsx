@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+//import { styled } from 'nativewind';
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -9,35 +10,21 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <View className="flex-1 justify-center p-4">
+      <Text className="text-2xl mb-5">Login</Text>
       <TextInput
-        style={styles.input}
+        className="h-10 border border-gray-400 mb-5 px-2.5"
         placeholder="Phone Number"
         keyboardType="phone-pad"
         value={phoneNumber}
         onChangeText={setPhoneNumber}
       />
-      <Button title="Send Verification Code" onPress={handleLogin} />
+      <TouchableOpacity 
+        className="bg-blue-600 py-2 rounded-lg"
+        onPress={handleLogin}
+      >
+        <Text className="text-white text-center">Send Verification Code</Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-});

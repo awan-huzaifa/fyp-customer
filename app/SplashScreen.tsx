@@ -1,6 +1,7 @@
 import { View, Image, StyleSheet, Dimensions } from 'react-native';
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import React from 'react';
 import Animated, { 
   useAnimatedStyle, 
   withSpring, 
