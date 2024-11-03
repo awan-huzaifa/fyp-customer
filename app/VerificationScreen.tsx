@@ -1,13 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function VerificationScreen() {
   const [code, setCode] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(60);
   const navigation = useNavigation();
   const route = useRoute();
-  const { name, phoneNumber, password, location } = route.params;
+  const { name, phoneNumber, password, location, role } = route.params as {
+    name: string;
+    phoneNumber: string;
+    password: string;
+    location: string;
+    role: string;
+  };
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
@@ -25,53 +32,70 @@ export default function VerificationScreen() {
       return;
     }
 
-  
-
     try {
-      // Change the URL to the correct one for verification
-      const response = await fetch('https://40d5-2400-adc1-411-de00-00-2.ngrok-free.app/users/', {
+      const isDevelopment = true;
+      const testCode = '1234';
+
+      if (isDevelopment) {
+        if (verificationCode === testCode) {
+          Alert.alert('Success', 'User verified and registered.', [
+            {
+              text: 'OK',
+              onPress: () => {
+                navigation.navigate('HomeScreen' as never);
+              }
+            }
+          ]);
+        } else {
+          Alert.alert('Error', 'Invalid verification code');
+        }
+        return;
+      }
+
+      const API_URL = 'http://192.168.18.171:3000';
+      const response = await fetch(`${API_URL}/api/users/verify-code-and-create-user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({ phoneNumber, verificationCode }),
+        body: JSON.stringify({ 
+          name, 
+          phone: phoneNumber, 
+          password, 
+          location, 
+          role, 
+          code: verificationCode 
+        }),
       });
-    
+
       if (response.ok) {
-        Alert.alert('Success', 'Code verified. Proceeding to registration.');
-    
-        // Send registration details to the backend
-        const registrationResponse = await fetch('https://your-backend-url.com/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name, phoneNumber, password, location }),
-        });
-    
-        if (registrationResponse.ok) {
-          Alert.alert('Success', 'Registration details sent successfully.');
-          navigation.navigate('HomeScreen');
-        } else {
-          Alert.alert('Error', 'Failed to send registration details.');
-        }
+        Alert.alert('Success', 'User verified and registered.', [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.navigate('HomeScreen' as never);
+            }
+          }
+        ]);
       } else {
-        Alert.alert('Error', 'Invalid verification code');
+        const errorData = await response.json();
+        Alert.alert('Error', errorData.message || 'Invalid verification code');
       }
     } catch (error) {
       Alert.alert('Error', 'An error occurred during verification');
+      console.error('Error details:', error);
     }
   };
 
   const handleResendCode = async () => {
     try {
-      //change the url to the correct one
-      const response = await fetch('https://40d5-2400-adc1-411-de00-00-2.ngrok-free.app/users/verify', {
+      const response = await fetch('http://localhost:3000/api/users/send-verification-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phoneNumber }),
+        body: JSON.stringify({ phone: phoneNumber }),
       });
 
       if (response.ok) {
@@ -85,105 +109,197 @@ export default function VerificationScreen() {
     }
   };
 
- 
   const handleInputChange = (text: string, index: number) => {
     const newCode = [...code];
     newCode[index] = text;
     setCode(newCode);
 
-    // Automatically focus the next input
     if (text && index < 3) {
       const nextInput = inputRefs.current[index + 1];
       nextInput?.focus();
     }
+    if (!text && index > 0) {
+      const prevInput = inputRefs.current[index - 1];
+      prevInput?.focus();
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Enter Verification Code</Text>
-      <View style={styles.codeContainer}>
-        {code.map((digit, index) => (
-          <TextInput
-            key={index}
-            ref={(input) => (inputRefs.current[index] = input)}
-            style={styles.input}
-            keyboardType="number-pad"
-            maxLength={1}
-            value={digit}
-            onChangeText={(text) => handleInputChange(text, index)}
-          />
-        ))}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F7FF" />
+      
+      {/* Header Section */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Verification Code</Text>
+        <Text style={styles.subtitle}>
+          Please enter the 4-digit code sent to{'\n'}
+          <Text style={styles.phoneText}>{phoneNumber}</Text>
+        </Text>
       </View>
-      <TouchableOpacity style={styles.verifyButton} onPress={handleVerifyCode}>
-        <Text style={styles.verifyButtonText}>Verify Code</Text>
-      </TouchableOpacity>
-      {timer === 0 ? (
-        <TouchableOpacity onPress={handleResendCode}>
-          <Text style={styles.resendText}>Resend Code</Text>
+
+      {/* Code Input Section */}
+      <View style={styles.codeSection}>
+        <View style={styles.codeContainer}>
+          {code.map((digit, index) => (
+            <View key={index} style={styles.inputWrapper}>
+              <TextInput
+                ref={(input) => (inputRefs.current[index] = input)}
+                style={styles.input}
+                keyboardType="number-pad"
+                maxLength={1}
+                value={digit}
+                onChangeText={(text) => handleInputChange(text, index)}
+                selectionColor="#4E60FF"
+              />
+            </View>
+          ))}
+        </View>
+
+        {/* Timer and Resend Section */}
+        <View style={styles.timerContainer}>
+          <Ionicons 
+            name="time-outline" 
+            size={20} 
+            color={timer === 0 ? '#666B8F' : '#4E60FF'} 
+          />
+          {timer === 0 ? (
+            <TouchableOpacity onPress={handleResendCode}>
+              <Text style={styles.resendText}>Resend Code</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={styles.timerText}>
+              Resend code in <Text style={styles.timerNumber}>{timer}s</Text>
+            </Text>
+          )}
+        </View>
+
+        {/* Verify Button */}
+        <TouchableOpacity 
+          style={styles.verifyButton} 
+          onPress={handleVerifyCode}
+        >
+          <Text style={styles.verifyButtonText}>Verify & Continue</Text>
         </TouchableOpacity>
-      ) : (
-        <Text style={styles.timerText}>Resend code in {timer} seconds</Text>
-      )}
-     
-    </View>
+
+        {/* Help Text */}
+        <TouchableOpacity style={styles.helpContainer}>
+          <Ionicons name="help-circle-outline" size={20} color="#666B8F" />
+          <Text style={styles.helpText}>Didn't receive the code?</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F7FF',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 36,
-    textAlign: 'center',
+    color: '#1E2243',
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666B8F',
+    lineHeight: 24,
+  },
+  phoneText: {
+    color: '#4E60FF',
+    fontWeight: '600',
+  },
+  codeSection: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   codeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    paddingHorizontal: 20,
+    marginTop: 30,
+  },
+  inputWrapper: {
+    width: 65,
+    height: 65,
+    borderRadius: 16,
+    backgroundColor: '#F8F9FF',
+    borderWidth: 1,
+    borderColor: '#E2E4ED',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   input: {
-    width: 50,
-    height: 50,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    textAlign: 'center',
+    flex: 1,
     fontSize: 24,
-  },
-  verifyButton: {
-    backgroundColor: '#32CD32',
-    paddingVertical: 20,
-    borderRadius: 16,
-    marginBottom: 16,
-    marginTop: 24,
-    width: '60%',
-    alignSelf: 'center',
-  },
-  verifyButtonText: {
-    color: '#ffffff',
+    fontWeight: 'bold',
     textAlign: 'center',
+    color: '#1E2243',
+  },
+  timerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 32,
+    gap: 8,
   },
   resendText: {
-    color: '#1E90FF',
-    textAlign: 'center',
+    color: '#4E60FF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   timerText: {
-    textAlign: 'center',
+    color: '#666B8F',
+    fontSize: 16,
   },
-  proceedButton: {
-    backgroundColor: '#1E90FF',
-    paddingVertical: 8,
-    borderRadius: 16,
-    marginTop: 16,
+  timerNumber: {
+    color: '#4E60FF',
+    fontWeight: '600',
   },
-  proceedButtonText: {
-    color: '#fff',
+  verifyButton: {
+    backgroundColor: '#4E60FF',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 40,
+    shadowColor: '#4E60FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  verifyButtonText: {
+    color: '#FFFFFF',
     textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  helpContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    gap: 8,
+  },
+  helpText: {
+    color: '#666B8F',
+    fontSize: 14,
   },
 });
