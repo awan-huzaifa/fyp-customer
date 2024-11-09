@@ -66,21 +66,10 @@ export default function RegisterScreen() {
     }
 
     try {
-      const isDevelopment = false; // Set to true to bypass API call
+      const isDevelopment = false;
+      const API_URL = 'http://192.168.18.171:3000';
 
-      if (isDevelopment) {
-        navigation.navigate('VerificationScreen', { 
-          name, 
-          phoneNumber, 
-          password, 
-          location, 
-          role: 'vendor',
-          testCode: '1234' 
-        });
-        return;
-      }
-
-      const API_URL = 'http://192.168.18.171:3000'; // Replace X with your actual IP
+      // Always send verification code request first
       const response = await fetch(`${API_URL}/api/users/send-verification-code`, {
         method: 'POST',
         headers: {
@@ -90,18 +79,21 @@ export default function RegisterScreen() {
         body: JSON.stringify({ phone: phoneNumber }),
       });
 
-      if (response.ok) {
-        navigation.navigate('VerificationScreen', { 
-          name, 
-          phoneNumber, 
-          password, 
-          location, 
-          role: 'vendor' 
-        });
-      } else {
+      if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to send verification code');
       }
+
+      // After successful verification code storage, navigate to verification screen
+      navigation.navigate('VerificationScreen', { 
+        name, 
+        phoneNumber, 
+        password, 
+        location,
+        role: 'vendor',
+        testCode: isDevelopment ? '1234' : undefined
+      });
+
     } catch (error) {
       Alert.alert('Error', 'An error occurred while sending the verification code. Please try again.');
       console.error('Error details:', error);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function VerificationScreen() {
   const [code, setCode] = useState(['', '', '', '']);
@@ -33,43 +34,36 @@ export default function VerificationScreen() {
     }
 
     try {
-      const isDevelopment = true;
-      const testCode = '1234';
-
-      if (isDevelopment) {
-        if (verificationCode === testCode) {
-          Alert.alert('Success', 'User verified and registered.', [
-            {
-              text: 'OK',
-              onPress: () => {
-                navigation.navigate('HomeScreen' as never);
-              }
-            }
-          ]);
-        } else {
-          Alert.alert('Error', 'Invalid verification code');
-        }
-        return;
-      }
-
       const API_URL = 'http://192.168.18.171:3000';
+      
+      const requestData = { 
+        name, 
+        phone: phoneNumber, 
+        password, 
+        location, // Send the raw location object
+        role, 
+        code: verificationCode 
+      };
+
+      console.log('Sending verification request with data:', requestData);
+
       const response = await fetch(`${API_URL}/api/users/verify-code-and-create-user`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({ 
-          name, 
-          phone: phoneNumber, 
-          password, 
-          location, 
-          role, 
-          code: verificationCode 
-        }),
+        body: JSON.stringify(requestData),
       });
 
+      console.log('Response status:', response.status);
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+
       if (response.ok) {
+        await AsyncStorage.setItem('userToken', responseData.token);
+        await AsyncStorage.setItem('userData', JSON.stringify(responseData.user));
+
         Alert.alert('Success', 'User verified and registered.', [
           {
             text: 'OK',
@@ -79,8 +73,7 @@ export default function VerificationScreen() {
           }
         ]);
       } else {
-        const errorData = await response.json();
-        Alert.alert('Error', errorData.message || 'Invalid verification code');
+        Alert.alert('Error', responseData.message || 'Invalid verification code');
       }
     } catch (error) {
       Alert.alert('Error', 'An error occurred during verification');
