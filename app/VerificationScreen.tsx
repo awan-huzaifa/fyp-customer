@@ -4,18 +4,21 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+type RouteParams = {
+  name: string;
+  phoneNumber: string;
+  password: string;
+  location: string;
+  role: string;
+  serviceArea: number;
+};
+
 export default function VerificationScreen() {
   const [code, setCode] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(60);
   const navigation = useNavigation();
   const route = useRoute();
-  const { name, phoneNumber, password, location, role } = route.params as {
-    name: string;
-    phoneNumber: string;
-    password: string;
-    location: string;
-    role: string;
-  };
+  const { name, phoneNumber, password, location, role, serviceArea } = route.params as RouteParams;
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
@@ -40,9 +43,10 @@ export default function VerificationScreen() {
         name, 
         phone: phoneNumber, 
         password, 
-        location, // Send the raw location object
+        location,
         role, 
-        code: verificationCode 
+        code: verificationCode,
+        serviceArea: serviceArea
       };
 
       console.log('Sending verification request with data:', requestData);
@@ -64,11 +68,11 @@ export default function VerificationScreen() {
         await AsyncStorage.setItem('userToken', responseData.token);
         await AsyncStorage.setItem('userData', JSON.stringify(responseData.user));
 
-        Alert.alert('Success', 'User verified and registered.', [
+        Alert.alert('Success', 'User verified. Please complete CNIC verification.', [
           {
             text: 'OK',
             onPress: () => {
-              navigation.navigate('HomeScreen' as never);
+              navigation.navigate('CNICVerificationScreen' as never);
             }
           }
         ]);

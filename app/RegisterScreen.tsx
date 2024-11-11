@@ -4,6 +4,8 @@ import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Slider from '@react-native-community/slider';
+
 type RootStackParamList = {
   WelcomeScreen: undefined;
   HomeScreen: undefined;
@@ -14,6 +16,7 @@ type RootStackParamList = {
     location: Location.LocationObject;
     role: string;
     testCode?: string;
+    serviceArea: number;
   };
 };
 
@@ -24,6 +27,7 @@ export default function RegisterScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [serviceArea, setServiceArea] = useState(5); // Default 5km
 
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -91,7 +95,8 @@ export default function RegisterScreen() {
         password, 
         location,
         role: 'vendor',
-        testCode: isDevelopment ? '1234' : undefined
+        testCode: isDevelopment ? '1234' : undefined,
+        serviceArea: serviceArea
       });
 
     } catch (error) {
@@ -292,6 +297,45 @@ export default function RegisterScreen() {
                   onChangeText={setConfirmPassword}
                   placeholderTextColor="#A0A3BD"
                 />
+              </View>
+            </View>
+
+            {/* Service Area Selector */}
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{ 
+                fontSize: 14,
+                fontWeight: '600',
+                color: '#1E2243',
+                marginBottom: 8
+              }}>Service Area Radius</Text>
+              
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ 
+                  fontSize: 24,
+                  fontWeight: 'bold',
+                  color: '#4E60FF',
+                  marginBottom: 8
+                }}>
+                  {serviceArea} km
+                </Text>
+                <Slider
+                  style={{ width: '100%', height: 40 }}
+                  minimumValue={1}
+                  maximumValue={20}
+                  step={1}
+                  value={serviceArea}
+                  onValueChange={setServiceArea}
+                  minimumTrackTintColor="#4E60FF"
+                  maximumTrackTintColor="#E2E4ED"
+                  thumbTintColor="#4E60FF"
+                />
+                <Text style={{ 
+                  fontSize: 12,
+                  color: '#666B8F',
+                  textAlign: 'center'
+                }}>
+                  Select the radius within which you'll provide services
+                </Text>
               </View>
             </View>
 

@@ -4,10 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
-import { Slot } from "expo-router";
 import React from 'react';
 import "../global.css";
-
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import SplashScreenComponent from './SplashScreen';
@@ -17,7 +15,8 @@ import RegisterScreen from './RegisterScreen';
 import HomeScreen from './HomeScreen';
 import TabLayout from './(tabs)/_layout'; 
 import VerificationScreen from './VerificationScreen';
-
+import CNICVerificationScreen from './CNICVerificationScreen';
+import RegistrationStatusCheck from './components/RegistrationStatusCheck';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,7 +38,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSplashScreenVisible(false); // Hide splash after 3 seconds
+      setSplashScreenVisible(false);
     }, 3000);
     return () => clearTimeout(timer);
   }, []);
@@ -49,21 +48,23 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={DefaultTheme}>
-      <Stack.Navigator>
-        {isSplashScreenVisible ? (
-          <Stack.Screen name="SplashScreen" component={SplashScreenComponent} options={{ headerShown: false }} />
-        ) : (
-          <>
-            <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="VerificationScreen" component={VerificationScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="HomeScreen" component={HomeScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="TabLayout" component={TabLayout} options={{ headerShown: false }} />
-            
-          </>
-        )}
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <RegistrationStatusCheck />
+      <Stack.Navigator 
+        initialRouteName={isSplashScreenVisible ? "SplashScreen" : "WelcomeScreen"}
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right'
+        }}
+      >
+        <Stack.Screen name="SplashScreen" component={SplashScreenComponent} />
+        <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+        <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
+        <Stack.Screen name="VerificationScreen" component={VerificationScreen} />
+        <Stack.Screen name="CNICVerificationScreen" component={CNICVerificationScreen} />
+        <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="TabLayout" component={TabLayout} />
       </Stack.Navigator>
     </ThemeProvider>
   );
