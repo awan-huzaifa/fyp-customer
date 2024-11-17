@@ -17,6 +17,14 @@ import TabLayout from './(tabs)/_layout';
 import VerificationScreen from './VerificationScreen';
 import CNICVerificationScreen from './CNICVerificationScreen';
 import RegistrationStatusCheck from './components/RegistrationStatusCheck';
+import ElectricianScreen from './ElectricianScreen';
+import CleaningScreen from './CleaningScreen';
+import AcScreen from './Ac';
+import MechanicScreen from './MechanicScreen';
+import PainterScreen from './PainterScreen';
+import PlumberScreen from './PlumberScreen';
+import OrderTabScreen from './OrderTabScreen';
+
 
 SplashScreen.preventAutoHideAsync();
 
@@ -64,7 +72,17 @@ export default function RootLayout() {
         <Stack.Screen name="VerificationScreen" component={VerificationScreen} />
         <Stack.Screen name="CNICVerificationScreen" component={CNICVerificationScreen} />
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="ElectricianScreen" component={ElectricianScreen} />
+        <Stack.Screen name="CleaningScreen" component={CleaningScreen} />
+        <Stack.Screen name="AcScreen" component={AcScreen} />
+        <Stack.Screen name="MechanicScreen" component={MechanicScreen} />
+        <Stack.Screen name="PainterScreen" component={PainterScreen} />
+        <Stack.Screen name="PlumberScreen" component={PlumberScreen} />
+        <Stack.Screen name="OrderTabScreen" component={OrderTabScreen} />
+
+
         <Stack.Screen name="TabLayout" component={TabLayout} />
+
       </Stack.Navigator>
     </ThemeProvider>
   );
