@@ -10,7 +10,7 @@ import Animated, {
   runOnJS
 } from 'react-native-reanimated';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function SplashScreen() {
   const opacity = useSharedValue(0);
 
   const navigateToAuth = () => {
-    router.replace('./WelcomeScreen');
+    router.replace('/(auth)/WelcomeScreen');
   };
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function SplashScreen() {
     <View style={styles.container}>
       <Animated.View style={[styles.logoContainer, logoStyle]}>
         <Image
-          source={require('../assets/images/icon.png')}  // You'll need to add your logo
+          source={require('../assets/images/icon.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -59,7 +59,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff', // Or your brand color
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
   },

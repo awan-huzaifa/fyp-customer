@@ -10,84 +10,8 @@ export default function LoginScreen() {
   const navigation = useNavigation();
 
   const handleLogin = async () => {
-    if (!phoneNumber || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    try {
-      // const response = await fetch('http://192.168.18.171:3000/api/users/login', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     phone: phoneNumber,
-      //     password: password,
-      //   }),
-      // });
-
-      // const data = await response.json();
-
-      // // if (!response.ok) {
-      // //   throw new Error(data.message || 'Login failed');
-      // // }
-
-      // // Store token and user data
-      // await AsyncStorage.setItem('userToken', data.token);
-      // await AsyncStorage.setItem('userData', JSON.stringify(data.user));
-
-      // // Check user role and status
-      // if (data.user.role === 'vendor') {
-      //   if (data.redirectTo === 'CNICVerificationScreen') {
-      //     // Registration not complete, redirect to CNIC verification
-      //     navigation.navigate('CNICVerificationScreen' as never);
-      //     return;
-      //   }
-
-      //   const vendor = data.user.vendor;
-      //   if (!vendor) {
-      //     Alert.alert('Error', 'Vendor profile not found');
-      //     return;
-      //   }
-
-      //   if (vendor.verificationStatus === 'pending') {
-      //     Alert.alert(
-      //       'Account Under Review',
-      //       'Your account is still under review. Please wait for admin approval.',
-      //       [{ text: 'OK', onPress: () => navigation.navigate('WelcomeScreen' as never) }]
-      //     );
-      //     return;
-      //   }
-
-      //   if (vendor.verificationStatus === 'rejected') {
-      //     Alert.alert(
-      //       'Account Rejected',
-      //       'Your account verification was rejected. Please contact support.',
-      //       [{ text: 'OK', onPress: () => navigation.navigate('WelcomeScreen' as never) }]
-      //     );
-      //     return;
-      //   }
-
-        // if (vendor.verificationStatus === 'approved' && 
-        //     vendor.backgroundCheckStatus === 'passed' && 
-        //     vendor.registrationStatus === 'complete') {
-        //   // All checks passed, navigate to main dashboard
-        //   navigation.navigate('HomeScreen' as never);
-        //   return;
-        // }
-        const a = 5;
-        if (a==5){
-          navigation.navigate('HomeScreen' as never);
-           return;
-        }
-      
-
-      //Alert.alert('Error', 'Invalid account type or status');
-    } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to login');
-      console.error('Login error:', error);
-    }
+    // Bypass authentication and directly navigate to home
+    navigation.navigate('HomeScreen' as never);
   };
 
   return (

@@ -1,89 +1,96 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
-import 'react-native-reanimated';
 import React from 'react';
-import "../global.css";
+import { Stack } from 'expo-router';
+import { ThemeProvider } from '@react-navigation/native';
+import { useColorScheme, ActivityIndicator, View } from 'react-native';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-import SplashScreenComponent from './SplashScreen';
-import WelcomeScreen from './WelcomeScreen';
-import LoginScreen from './LoginScreen';
-import RegisterScreen from './RegisterScreen';
-import HomeScreen from './HomeScreen';
-import TabLayout from './(tabs)/_layout'; 
-import VerificationScreen from './VerificationScreen';
-import CNICVerificationScreen from './CNICVerificationScreen';
-import RegistrationStatusCheck from './components/RegistrationStatusCheck';
-import ElectricianScreen from './ElectricianScreen';
-import CleaningScreen from './CleaningScreen';
-import AcScreen from './Ac';
-import MechanicScreen from './MechanicScreen';
-import PainterScreen from './PainterScreen';
-import PlumberScreen from './PlumberScreen';
-import OrderTabScreen from './OrderTabScreen';
-
-
-SplashScreen.preventAutoHideAsync();
-
-const Stack = createNativeStackNavigator();
-
-export default function RootLayout() {
+function RootLayoutNav() {
+  const { isLoading } = useAuth();
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
 
-  const [isSplashScreenVisible, setSplashScreenVisible] = useState(true);
+  const customLightTheme = {
+    dark: false,
+    colors: {
+      primary: '#4E60FF',
+      background: '#F5F7FF',
+      card: '#FFFFFF',
+      text: '#1E2243',
+      border: '#E2E4ED',
+      notification: '#FF4E4E',
+    },
+    fonts: {
+      regular: {
+        fontFamily: 'System',
+        fontWeight: '400',
+      },
+      medium: {
+        fontFamily: 'System',
+        fontWeight: '500',
+      },
+      bold: {
+        fontFamily: 'System',
+        fontWeight: '700',
+      },
+    },
+  };
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+  const customDarkTheme = {
+    dark: true,
+    colors: {
+      primary: '#4E60FF',
+      background: '#1A1B1E',
+      card: '#2A2B2E',
+      text: '#FFFFFF',
+      border: '#3A3B3E',
+      notification: '#FF4E4E',
+    },
+    fonts: {
+      regular: {
+        fontFamily: 'System',
+        fontWeight: '400',
+      },
+      medium: {
+        fontFamily: 'System',
+        fontWeight: '500',
+      },
+      bold: {
+        fontFamily: 'System',
+        fontWeight: '700',
+      },
+    },
+  };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSplashScreenVisible(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!loaded) {
-    return null;
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#4E60FF" />
+      </View>
+    );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <RegistrationStatusCheck />
-      <Stack.Navigator 
-        initialRouteName={isSplashScreenVisible ? "SplashScreen" : "WelcomeScreen"}
-        screenOptions={{
-          headerShown: false,
-          animation: 'slide_from_right'
-        }}
-      >
-        <Stack.Screen name="SplashScreen" component={SplashScreenComponent} />
-        <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
-        <Stack.Screen name="LoginScreen" component={LoginScreen} />
-        <Stack.Screen name="RegisterScreen" component={RegisterScreen} />
-        <Stack.Screen name="VerificationScreen" component={VerificationScreen} />
-        <Stack.Screen name="CNICVerificationScreen" component={CNICVerificationScreen} />
-        <Stack.Screen name="HomeScreen" component={HomeScreen} />
-        <Stack.Screen name="ElectricianScreen" component={ElectricianScreen} />
-        <Stack.Screen name="CleaningScreen" component={CleaningScreen} />
-        <Stack.Screen name="AcScreen" component={AcScreen} />
-        <Stack.Screen name="MechanicScreen" component={MechanicScreen} />
-        <Stack.Screen name="PainterScreen" component={PainterScreen} />
-        <Stack.Screen name="PlumberScreen" component={PlumberScreen} />
-        <Stack.Screen name="OrderTabScreen" component={OrderTabScreen} />
-
-
-        <Stack.Screen name="TabLayout" component={TabLayout} />
-
-      </Stack.Navigator>
+    <ThemeProvider value={colorScheme === 'dark' ? customDarkTheme : customLightTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="SplashScreen" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(services)" />
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false,
+            gestureEnabled: false 
+          }} 
+        />
+      </Stack>
     </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }

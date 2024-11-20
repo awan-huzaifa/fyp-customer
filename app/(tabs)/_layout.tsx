@@ -1,60 +1,75 @@
 import { Tabs } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { useSegments, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-
-// ... rest of your layout code
-
-import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { Platform } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const segments = useSegments();
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user is authenticated here
-    const isAuthenticated = false; // This will be replaced with actual auth check
-
-    // Add a small delay to ensure root layout is mounted
-    const timer = setTimeout(() => {
-      if (isLoading) {
-        // Show splash screen
-        router.replace('/');
-      } else if (!isAuthenticated) {
-        // Not authenticated, redirect to auth flow
-        router.replace('../');
-      }
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [isLoading]);
+  const { user } = useAuth();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-      }}>
+        tabBarActiveTintColor: '#4E60FF',
+        tabBarInactiveTintColor: '#666B8F',
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopWidth: 1,
+          borderTopColor: '#E2E4ED',
+          height: Platform.OS === 'ios' ? 88 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          paddingTop: 8,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
+        tabBarIconStyle: {
+          marginBottom: -3,
+        },
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="HomeScreen"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="OrderTabScreen"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+          title: 'Orders',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="list-outline" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="PaymentScreen"
+        options={{
+          title: 'Payments',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="wallet-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ProfileScreen"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
+          tabBarBadge: user?.unreadNotifications ? user.unreadNotifications : undefined,
         }}
       />
     </Tabs>
