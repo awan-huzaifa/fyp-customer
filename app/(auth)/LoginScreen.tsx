@@ -1,17 +1,38 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Image, SafeAreaView, StatusBar } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ApiService from '../../services/ApiService';
 
 export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const handleLogin = async () => {
-    // Bypass authentication and directly navigate to home
-    navigation.navigate('HomeScreen' as never);
+    try {
+      const response = await ApiService.post('/users/login', {
+        phone: phoneNumber,
+        password: password,
+        role: 'customer'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+
+      const data = await response.json();
+      await AsyncStorage.setItem('userToken', data.token);
+      await AsyncStorage.setItem('userData', JSON.stringify(data.user));
+
+      router.replace('/(tabs)');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to login';
+      Alert.alert('Error', errorMessage);
+      console.error('Login error:', error);
+    }
   };
 
   return (
@@ -138,7 +159,7 @@ export default function LoginScreen() {
             marginTop: 24
           }}>
             <Text style={{ color: '#666B8F' }}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen' as never)}>
+            <TouchableOpacity onPress={() => router.push('/(auth)/RegisterScreen')}>
               <Text style={{ color: '#4E60FF', fontWeight: '600' }}>Register</Text>
             </TouchableOpacity>
           </View>

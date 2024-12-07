@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
+import ApiService from '../../services/ApiService';
 
 type RootStackParamList = {
   WelcomeScreen: undefined;
@@ -53,9 +54,36 @@ export default function RegisterScreen() {
     requestLocationPermission();
   }, [navigation]);
 
-  const handleRegister = () => {
-    // Skip verification and go straight to home
-    router.push('/HomeScreen');
+  const handleRegister = async () => {
+    // ... validation checks ...
+    
+
+    try {
+      const response = await ApiService.post('/users/send-verification-code', { 
+        phone: phoneNumber 
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send verification code');
+      }
+
+      // Navigate to verification screen with necessary data
+      router.push({
+        pathname: '/(auth)/VerificationScreen',
+        params: { 
+          name, 
+          phoneNumber, 
+          password, 
+          location: JSON.stringify(location),
+          role: 'customer' // Changed from 'vendor' to 'customer'
+        }
+      });
+
+    } catch (error) {
+      Alert.alert('Error', 'An error occurred while sending the verification code. Please try again.');
+      console.error('Error details:', error);
+    }
   };
 
   return (

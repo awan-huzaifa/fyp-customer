@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, SafeAreaVie
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import  ApiService from '../../services/ApiService';
+import { useRouter } from 'expo-router';
 
 type RouteParams = {
   name: string;
@@ -20,6 +22,7 @@ export default function VerificationScreen() {
   const route = useRoute();
   const { name, phoneNumber, password, location, role, serviceArea } = route.params as RouteParams;
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const countdown = setInterval(() => {
@@ -37,51 +40,29 @@ export default function VerificationScreen() {
     }
 
     try {
-      const API_URL = 'http://192.168.18.171:3000';
-      
-      const requestData = { 
-        name, 
-        phone: phoneNumber, 
-        password, 
-        location,
-        role, 
-        code: verificationCode,
-        serviceArea: serviceArea
-      };
-
-      console.log('Sending verification request with data:', requestData);
-
-      const response = await fetch(`${API_URL}/api/users/verify-code-and-create-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(requestData),
+      const response = await ApiService.post('/users/verify-code-and-create-user', {
+        name,
+        phone: phoneNumber,
+        password,
+        location: JSON.parse(location || '{}'),
+        role: 'customer',
+        code: verificationCode
       });
 
-      console.log('Response status:', response.status);
-      const responseData = await response.json();
-      console.log('Response data:', responseData);
-
       if (response.ok) {
-        await AsyncStorage.setItem('userToken', responseData.token);
-        await AsyncStorage.setItem('userData', JSON.stringify(responseData.user));
+        const data = await response.json();
+        await AsyncStorage.setItem('userToken', data.token);
+        await AsyncStorage.setItem('userData', JSON.stringify(data.user));
 
-        Alert.alert('Success', 'User verified. Please complete CNIC verification.', [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate('CNICVerificationScreen' as never);
-            }
-          }
-        ]);
+        // Navigate to tabs after successful verification
+        router.replace('/(tabs)');
       } else {
-        Alert.alert('Error', responseData.message || 'Invalid verification code');
+        const errorData = await response.json();
+        Alert.alert('Error', errorData.message || 'Verification failed');
       }
     } catch (error) {
-      Alert.alert('Error', 'An error occurred during verification');
-      console.error('Error details:', error);
+      Alert.alert('Error', 'Failed to verify code');
+      console.error('Verification error:', error);
     }
   };
 
