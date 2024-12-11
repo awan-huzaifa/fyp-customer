@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { MOCK_DATA } from '../../utils/mockData';
 import { SharedElement } from 'react-navigation-shared-element';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.4;
@@ -61,12 +63,19 @@ type Styles = {
   orderStatus: (status: string) => TextStyle;
 };
 
+interface UserData {
+  name: string;
+  phone: string;
+  email?: string;
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const categories = MOCK_DATA.categories;
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('');
 
   // Animation values
   const scrollY = new Animated.Value(0);
@@ -92,7 +101,20 @@ export default function HomeScreen() {
         delay: index * 100,
       }).start();
     });
+    loadUserData();
   }, []);
+
+  const loadUserData = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem('userData');
+      if (storedData) {
+        const userData: UserData = JSON.parse(storedData);
+        setUserName(userData.name);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -130,6 +152,16 @@ export default function HomeScreen() {
               router.push('/PlumberScreen');
             } else if (service.name === 'Electrician') {
               router.push('/ElectricianScreen');
+            } else if (service.name === 'AC Technician' || service.name === 'AC') {
+              router.push('/(services)/ACTechnicianScreen');
+            } else if (service.name === 'Mechanic' || service.name === 'Car Mechanic') {
+              router.push('/(services)/MechanicScreen');
+            } else if (service.name === 'Painter') {
+              Alert.alert(
+                'Coming Soon!',
+                'Painter services are currently under development. We will notify you once they are available.',
+                [{ text: 'OK', style: 'default' }]
+              );
             }
           }}
           style={styles.cardTouchable}
@@ -154,7 +186,7 @@ export default function HomeScreen() {
       {/* Animated Header */}
       <Animated.View style={[styles.header, { height: headerHeight }]}>
         <View>
-          <Text style={styles.greeting}>Hello, John 👋</Text>
+          <Text style={styles.greeting}>Hello, {userName || 'User'} 👋</Text>
           <Text style={styles.subtitle}>What service do you need?</Text>
         </View>
         <TouchableOpacity style={styles.profileButton}>

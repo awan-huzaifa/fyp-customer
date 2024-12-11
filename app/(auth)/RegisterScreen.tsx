@@ -103,7 +103,7 @@ export default function RegisterScreen() {
               color: '#1E2243',
               marginBottom: 8
             }}>
-              Service Provider Registration
+              Customer Registration
             </Text>
             <Text style={{ 
               fontSize: 16,
@@ -121,7 +121,7 @@ export default function RegisterScreen() {
             paddingHorizontal: 24
           }}>
             <Image
-              source={require('../../assets/images/register.png')}
+              source={require('../../assets/images/logo2.png')}
               style={{ 
                 width: '80%',
                 height: 200,

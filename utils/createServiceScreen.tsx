@@ -1,24 +1,50 @@
-import React from 'react';
-import { PlumberScreen } from '../app/(services)/PlumberScreen';
-import { ServiceScreenProps } from '../types/screens';
+import React, { useState, useEffect } from 'react';
+import { ServiceScreen } from '../app/(services)/PlumberScreen';
+import ApiService from '../services/ApiService';
+import { Alert } from 'react-native';
 
 export const createServiceScreen = (
   serviceName: string,
-  services: any[],
+  categoryId: number,
   customStyles?: any
 ) => {
-  function ServiceScreen() {
+  const ServiceScreenWrapper = () => {
+    const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      loadServices();
+    }, []);
+
+    const loadServices = async () => {
+      try {
+        const response = await ApiService.get(`/users/services?categoryId=${categoryId}`);
+        const data = await response.json();
+        if (data.success) {
+          setServices(data.services);
+        } else {
+          Alert.alert('Error', 'Failed to load services');
+        }
+      } catch (error) {
+        console.error('Error loading services:', error);
+        Alert.alert('Error', 'Failed to load services');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     return (
-      <PlumberScreen
+      <ServiceScreen
         screenTitle={serviceName}
         services={services}
         customStyles={customStyles}
+        isLoading={loading}
+        categoryId={categoryId}
       />
     );
-  }
+  };
 
-  // Set display name for debugging
-  ServiceScreen.displayName = `${serviceName.replace(/\s+/g, '')}Screen`;
+  ServiceScreenWrapper.displayName = `${serviceName.replace(/\s+/g, '')}Screen`;
   
-  return ServiceScreen;
+  return ServiceScreenWrapper;
 }; 

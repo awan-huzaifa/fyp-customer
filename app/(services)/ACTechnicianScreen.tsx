@@ -23,7 +23,7 @@ const { width } = Dimensions.get('window');
 // Create animated ScrollView
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
-export default function PlumberScreen() {
+export default function ACTechnicianScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedService, setSelectedService] = useState<any>(null);
@@ -40,7 +40,7 @@ export default function PlumberScreen() {
 
   const loadServices = async () => {
     try {
-      const response = await ApiService.get('/users/services?categoryId=1');
+      const response = await ApiService.get('/users/services?categoryId=3');
       const data = await response.json();
       if (data.success) {
         setServices(data.services);
@@ -78,7 +78,7 @@ export default function PlumberScreen() {
       params: {
         serviceId: service.id,
         serviceName: service.name,
-        categoryId: 1
+        categoryId: 3
       }
     });
   };
@@ -155,7 +155,7 @@ export default function PlumberScreen() {
               </Text>
 
               <Text style={styles.sectionTitle}>Features</Text>
-              {selectedService?.features.map((feature: string, index: number) => (
+              {selectedService?.features?.map((feature: string, index: number) => (
                 <View key={index} style={styles.featureItem}>
                   <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
                   <Text style={styles.featureText}>{feature}</Text>
@@ -206,7 +206,7 @@ export default function PlumberScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#4E60FF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Plumbing Services</Text>
+        <Text style={styles.headerTitle}>AC Technician Services</Text>
         <View style={{ width: 24 }} /> {/* Placeholder for symmetry */}
       </Animated.View>
 
@@ -438,4 +438,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-});
+}); 

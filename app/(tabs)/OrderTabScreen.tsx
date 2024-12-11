@@ -1,24 +1,72 @@
-import React, { useState } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, Animated, Alert, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MOCK_DATA } from '../../utils/mockData';
 import { useRouter } from 'expo-router';
+import ApiService from '../../services/ApiService';
 
-const activeOrders = MOCK_DATA.orders.filter(order => 
-  order.status === 'In Progress' || order.status === 'Pending'
-);
-
-const completedOrders = MOCK_DATA.orders.filter(order => 
-  order.status === 'Completed'
-);
+interface Order {
+  id: string;
+  status: string;
+  vendor: {
+    id: string;
+    name: string;
+    phoneForCalls: string;
+  };
+  service: {
+    name: string;
+  };
+  price: number;
+  createdAt: string;
+  location: {
+    address: string;
+  };
+}
 
 export default function OrderTabScreen() {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState('active');
   const [fadeAnim] = useState(new Animated.Value(1));
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const renderOrderCard = (order: any) => {
-    const isActive = order.status !== 'Completed';
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await ApiService.get('/orders');
+      const data = await response.json();
+      if (data.success) {
+        setOrders(data.orders);
+      } else {
+        Alert.alert('Error', data.message || 'Failed to fetch orders');
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      Alert.alert('Error', 'Failed to fetch orders');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const activeOrders = orders.filter(order => 
+    order.status === 'pending' || order.status === 'accepted' || order.status === 'in_progress'
+  );
+
+  const completedOrders = orders.filter(order => 
+    order.status === 'completed'
+  );
+
+  const renderOrderCard = (order: Order) => {
+    const isActive = order.status !== 'completed';
+    const formattedDate = new Date(order.createdAt).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
 
     return (
       <Animated.View style={[styles.orderCard, { opacity: fadeAnim }]}>
@@ -31,23 +79,19 @@ export default function OrderTabScreen() {
             styles.statusText,
             { color: getStatusColor(order.status).textColor }
           ]}>
-            {order.status}
+            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
           </Text>
         </View>
 
         {/* Service Provider Info */}
         <View style={styles.providerSection}>
-          <Image 
-            source={{ uri: order.providerImage }} 
-            style={styles.providerImage}
-          />
           <View style={styles.providerInfo}>
-            <Text style={styles.providerName}>{order.providerName}</Text>
-            <Text style={styles.serviceType}>{order.serviceType}</Text>
+            <Text style={styles.providerName}>{order.vendor.name}</Text>
+            <Text style={styles.serviceType}>{order.service.name}</Text>
           </View>
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>Total</Text>
-            <Text style={styles.price}>{order.price}</Text>
+            <Text style={styles.price}>Rs. {order.price}</Text>
           </View>
         </View>
 
@@ -55,11 +99,11 @@ export default function OrderTabScreen() {
         <View style={styles.detailsSection}>
           <View style={styles.detailItem}>
             <Ionicons name="calendar-outline" size={16} color="#666B8F" />
-            <Text style={styles.detailText}>{order.dateTime}</Text>
+            <Text style={styles.detailText}>{formattedDate}</Text>
           </View>
           <View style={styles.detailItem}>
             <Ionicons name="location-outline" size={16} color="#666B8F" />
-            <Text style={styles.detailText}>123 Main St, Block 6</Text>
+            <Text style={styles.detailText}>{order.location.address}</Text>
           </View>
         </View>
 
@@ -109,34 +153,81 @@ export default function OrderTabScreen() {
     );
   };
 
-  const handleContact = (order: any) => {
+  const handleContact = (order: Order) => {
     // Implement contact functionality
-    Alert.alert('Contact', `Calling ${order.providerName}...`);
+    const phoneNumber = order.vendor.phoneForCalls;
+    Alert.alert(
+      'Contact Provider',
+      `Call ${order.vendor.name}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Call',
+          onPress: () => {
+            // Use Linking to make a phone call
+            Linking.openURL(`tel:${phoneNumber}`);
+          }
+        }
+      ]
+    );
   };
 
-  const handleCancel = (order: any) => {
-    // Implement cancel functionality
-    Alert.alert('Cancel', 'Are you sure you want to cancel this order?');
+  const handleCancel = (order: Order) => {
+    Alert.alert(
+      'Cancel Order',
+      'Are you sure you want to cancel this order?',
+      [
+        {
+          text: 'No',
+          style: 'cancel'
+        },
+        {
+          text: 'Yes',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await ApiService.post(`/orders/${order.id}/cancel`);
+              const data = await response.json();
+              if (data.success) {
+                fetchOrders(); // Refresh orders list
+              } else {
+                Alert.alert('Error', data.message || 'Failed to cancel order');
+              }
+            } catch (error) {
+              console.error('Error cancelling order:', error);
+              Alert.alert('Error', 'Failed to cancel order');
+            }
+          }
+        }
+      ]
+    );
   };
 
-  const handleRebook = (order: any) => {
-    // Implement rebook functionality
-    Alert.alert('Rebook', 'Rebooking this service...');
+  const handleRebook = (order: Order) => {
+    router.push({
+      pathname: "/(services)/PlumberScreen",
+      params: { categoryId: order.service.categoryId }
+    });
   };
 
-  const handleReview = (order: any) => {
-    // Implement review functionality
-    Alert.alert('Review', 'Write a review...');
+  const handleReview = (order: Order) => {
+    // Navigate to review screen (to be implemented)
+    Alert.alert('Coming Soon', 'Review feature will be available soon!');
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'In Progress':
+    switch (status.toLowerCase()) {
+      case 'accepted':
         return { bgColor: '#E8F5E9', textColor: '#4CAF50' };
-      case 'Pending':
+      case 'pending':
         return { bgColor: '#FFF3E0', textColor: '#FF9800' };
-      case 'Completed':
+      case 'completed':
         return { bgColor: '#E3F2FD', textColor: '#2196F3' };
+      case 'in_progress':
+        return { bgColor: '#E8F5E9', textColor: '#4CAF50' };
       default:
         return { bgColor: '#F5F5F5', textColor: '#9E9E9E' };
     }
@@ -263,11 +354,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
-  },
-  providerImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
   },
   providerInfo: {
     flex: 1,
